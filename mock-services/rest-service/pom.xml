@@ -42,6 +42,12 @@
             <artifactId>commons</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/uk.co.jemos.podam/podam -->
+        <!--<dependency>-->
+            <!--<groupId>uk.co.jemos.podam</groupId>-->
+            <!--<artifactId>podam</artifactId>-->
+            <!--<version>7.0.5.RELEASE</version>-->
+        <!--</dependency>-->
     </dependencies>
     <build>
         <plugins>
