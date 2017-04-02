@@ -5,7 +5,6 @@ import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -13,52 +12,81 @@ import java.util.List;
  */
 public class ResourcesUsageMonitor {
     private OperatingSystemMXBean operatingSystemMXBean;
-    private List<State> stateList;
-    private HashMap<String, Method> resourceGetters;
-    private boolean isMonitoring;
     private long sleepInterval;
+    private int bufferSize;
+    private boolean initialized;
+    private Runnable monitorRunnable;
+
+    //getters
+    private Method freePhysicalMemorySizeGetters;
+    private Method processCpuLoadGetters;
+
+    //state buffers
+    private Object[] freePhysicalMemoryBuffer;
+    private Object[] systemCpuLoadBuffer;
+    private long[] systemTimeBuffer;
+
+    //dynamic variable
+    private int currentPointer;
+    private boolean isMonitoring;
     private Exception monitoringException;
     private Thread monitorThread;
 
-    public ResourcesUsageMonitor(long sleepInterval) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        this.operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+    public ResourcesUsageMonitor(long sleepInterval, int bufferSize) {
         this.sleepInterval = sleepInterval;
-        initResourceGetters();
+        this.bufferSize = bufferSize;
     }
 
-    private void initResourceGetters() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        this.resourceGetters = new HashMap<>();
-        for (Method method : State.class.getMethods()) {
-            String methodName = method.getName();
-            if (method.getParameterCount() == 0 && methodName.substring(0, 3).equals("get")) {
-                Method resourceGetter = operatingSystemMXBean.getClass().getMethod(methodName);
-                resourceGetter.setAccessible(true);
-                resourceGetters.put(methodName, resourceGetter);
+    public void initialize() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        this.operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+
+        //prepare getters
+        freePhysicalMemorySizeGetters = operatingSystemMXBean.getClass().getMethod("getFreePhysicalMemorySize");
+        processCpuLoadGetters = operatingSystemMXBean.getClass().getMethod("getProcessCpuLoad");
+        freePhysicalMemorySizeGetters.setAccessible(true);
+        processCpuLoadGetters.setAccessible(true);
+
+        //commit buffers
+        this.freePhysicalMemoryBuffer = new Object[bufferSize];
+        this.systemCpuLoadBuffer = new Object[bufferSize];
+        this.systemTimeBuffer = new long[bufferSize];
+
+        //runnable for monitoring
+        monitorRunnable = () -> {
+            currentPointer = 0;
+            try {
+                while (isMonitoring) {
+                    //fill state to buffers
+                    freePhysicalMemoryBuffer[currentPointer] = freePhysicalMemorySizeGetters.invoke(operatingSystemMXBean);
+                    systemCpuLoadBuffer[currentPointer] = processCpuLoadGetters.invoke(operatingSystemMXBean);
+                    systemTimeBuffer[currentPointer] = System.currentTimeMillis();
+                    currentPointer++;
+
+                    Thread.sleep(sleepInterval);
+                }
+            } catch (Exception exception) {
+                isMonitoring = false;
+                monitoringException = exception;
             }
-        }
+        };
+
+        this.initialized = true;
     }
 
     public void start() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InterruptedException {
+        //check current state
         if (isMonitoring) {
             throw new IllegalStateException("Start monitoring before stop previous monitoring process");
         }
+        if (!initialized) {
+            throw new IllegalStateException("Resources monitor not initialized");
+        }
         isMonitoring = true;
-        stateList = new ArrayList<>();
-        Runnable monitoring = () -> {
-            while (isMonitoring) {
 
-                try {
-                    Thread.sleep(sleepInterval);
-                    stateList.add(getState());
-                } catch (Exception e) {
-                    isMonitoring = false;
-                    monitoringException = e;
-                    e.printStackTrace();
-                }
-            }
-        };
-        monitorThread = new Thread(monitoring);
-        monitorThread.start();
+        //start monitoring in new thread
+        this.monitorThread = new Thread(monitorRunnable);
+        this.monitorThread.setPriority(Thread.MAX_PRIORITY);
+        this.monitorThread.start();
     }
 
     public void stop() {
@@ -66,31 +94,34 @@ public class ResourcesUsageMonitor {
     }
 
     public List<State> getResult() throws Exception {
+        if (monitorThread.isAlive()) {
+            monitorThread.join();
+        }
+        //check state
         if (monitoringException != null) {
             throw monitoringException;
         }
-
-        if (monitorThread.isAlive()) {
-            Thread.sleep(2 * sleepInterval);
+        if (currentPointer == 0) {
+            throw new IllegalArgumentException("No one recorded states");
         }
 
-        return stateList;
-    }
+        //get start state
+        long startFreePhysicalMemory = (long) freePhysicalMemoryBuffer[0];
+        long startSystemTime = systemTimeBuffer[0];
 
-    private State getState() throws InvocationTargetException, IllegalAccessException {
-        State state = new State();
-        state.setCommittedVirtualMemorySize((long) getResource("getCommittedVirtualMemorySize"));
-        state.setFreePhysicalMemorySize((long) getResource("getFreePhysicalMemorySize"));
-        state.setFreeSwapSpaceSize((long) getResource("getFreeSwapSpaceSize"));
-        state.setProcessCpuLoad((double) getResource("getProcessCpuLoad"));
-        state.setSystemCpuLoad((double) getResource("getSystemCpuLoad"));
-        return state;
-    }
+        List<State> states = new ArrayList<>(currentPointer);
+        for (int i = 0; i < this.currentPointer; i++) {
+            //create state POJO by buffers data
+            State state = new State();
+            state.setStateNumber(i);
+            state.setSystemCpuLoad((double) systemCpuLoadBuffer[i]);
+            state.setUsedMemory(startFreePhysicalMemory - (long) freePhysicalMemoryBuffer[i]);
+            state.setSystemTime(systemTimeBuffer[i] - startSystemTime);
 
-    private Object getResource(String resourceGetterName) throws InvocationTargetException, IllegalAccessException {
-        Method method = resourceGetters.get(resourceGetterName);
-        Object invoke = method.invoke(operatingSystemMXBean);
-        return invoke;
+            states.add(state);
+        }
+
+        return states;
     }
 
     public Thread getMonitorThread() {
