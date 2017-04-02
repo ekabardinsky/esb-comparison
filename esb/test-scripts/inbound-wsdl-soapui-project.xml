@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="12d433b4-31ca-432b-b7b9-e9f6ee60a925" activeEnvironment="Default" name="inbound?wsdl" resourceRoot="" soapui-version="5.2.1" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="86dcfba0-44c2-4b4b-86cf-3fa358f3e232" wsaVersion="NONE" name="InboundServiceSoapBinding" type="wsdl" bindingName="{http://service.soap.commons.magister.ekabardinsky.ru/}InboundServiceSoapBinding" soapVersion="1_1" anonymous="optional" definition="http://localhost:8088/api/soap/inbound?wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://localhost:8088/api/soap/inbound?wsdl"><con:part><con:url>http://localhost:8088/api/soap/inbound?wsdl</con:url><con:content><![CDATA[<wsdl:definitions name="InboundService" targetNamespace="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http">
+  <wsdl:types>
+    <xsd:schema attributeFormDefault="qualified" elementFormDefault="qualified" targetNamespace="http://tempuri.org/PurchaseOrderSchema.xsd" xmlns:tns="http://tempuri.org/PurchaseOrderSchema.xsd">
+      <xsd:complexType name="Item">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="USPrice" nillable="true" type="xsd:decimal"/>
+          <xsd:element minOccurs="0" name="comment" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="partNum" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="productName" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="quantity" type="xsd:int"/>
+          <xsd:element minOccurs="0" name="shipDate" nillable="true" type="xsd:dateTime"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="PurchaseOrderType">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="billTo" nillable="true" type="tns:USAddress"/>
+          <xsd:element minOccurs="0" name="comment" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="confirmDate" nillable="true" type="xsd:dateTime"/>
+          <xsd:element minOccurs="0" name="items" nillable="true" type="tns:Items"/>
+          <xsd:element minOccurs="0" name="orderDate" nillable="true" type="xsd:dateTime"/>
+          <xsd:element minOccurs="0" name="shipTo" nillable="true" type="tns:USAddress"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="Items">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="item" nillable="true" type="tns:ArrayOfItem"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="ArrayOfItem">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="Item" nillable="true" type="tns:Item"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="USAddress">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="city" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="country" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="name" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="state" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="street" nillable="true" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="zip" nillable="true" type="xsd:decimal"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+    <xsd:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:ns0="http://tempuri.org/PurchaseOrderSchema.xsd">
+      <xsd:import namespace="http://tempuri.org/PurchaseOrderSchema.xsd"/>
+      <xsd:element name="test" type="tns:test"/>
+      <xsd:complexType name="test">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="purchaseOrder" type="ns0:PurchaseOrderType"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="testResponse" type="tns:testResponse"/>
+      <xsd:complexType name="testResponse">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="return" nillable="true" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="test">
+    <wsdl:part element="tns:test" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="testResponse">
+    <wsdl:part element="tns:testResponse" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="InboundServicePortType">
+    <wsdl:operation name="test">
+      <wsdl:input message="tns:test" name="test"></wsdl:input>
+      <wsdl:output message="tns:testResponse" name="testResponse"></wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="InboundServiceSoapBinding" type="tns:InboundServicePortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="test">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="test">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="testResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="InboundService">
+    <wsdl:port binding="tns:InboundServiceSoapBinding" name="InboundServicePort">
+      <soap:address location="http://localhost:8088/api/soap/inbound"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://localhost:8088/api/soap/inbound</con:endpoint></con:endpoints><con:operation id="67197085-1d3b-48cd-8e42-4a5525a53268" isOneWay="false" action="" name="test" bindingOperationName="test" type="Request-Response" outputName="testResponse" inputName="test" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="a3f1d579-2c38-480f-8e61-97a7baeae811" name="TestCall"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8088/api/soap/inbound</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ser="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:pur="http://tempuri.org/PurchaseOrderSchema.xsd">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ser:test>
+         <ser:purchaseOrder>
+            <pur:billTo>
+               <pur:city>city</pur:city>
+               <pur:country>country</pur:country>
+               <pur:name>name</pur:name>
+               <pur:state>state</pur:state>
+               <pur:street>street</pur:street>
+               <pur:zip>1</pur:zip>
+            </pur:billTo>
+            <pur:comment>comment</pur:comment>
+            <pur:confirmDate>2017-03-31</pur:confirmDate>
+            <pur:items>
+               <pur:item>
+                  <pur:Item>
+                     <pur:USPrice>1</pur:USPrice>
+                     <pur:comment>comment</pur:comment>
+                     <pur:partNum>1</pur:partNum>
+                     <pur:productName>productName</pur:productName>
+                     <pur:quantity>1</pur:quantity>
+                     <pur:shipDate>2017-03-31</pur:shipDate>
+                  </pur:Item>
+               </pur:item>
+            </pur:items>
+            <pur:orderDate>2017-03-31</pur:orderDate>
+            <pur:shipTo>
+               <pur:city>city</pur:city>
+               <pur:country>country</pur:country>
+               <pur:name>name</pur:name>
+               <pur:state>state</pur:state>
+               <pur:street>street</pur:street>
+               <pur:zip>1</pur:zip>
+            </pur:shipTo>
+         </ser:purchaseOrder>
+      </ser:test>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://service.soap.commons.magister.ekabardinsky.ru/InboundServicePortType/test"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/></con:soapui-project>
