@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ftp="http://www.mulesoft.org/schema/mule/ee/ftp" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/ftp http://www.mulesoft.org/schema/mule/ee/ftp/current/mule-ftp-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <flow name="outboundFtpFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/ftp/outbound" doc:name="HTTP"/>
+        <set-payload value="#[ru.ekabardinsky.magister.commons.Monitoring.ResourceManager.getTestResource(5000000)]" doc:name="Set Payload"/>
+        <ftp:outbound-endpoint host="${ftp.host}" port="${ftp.port}" path="${ftp.path}" user="${ftp.username}" password="${ftp.password}" outputPattern="#['5mb']" responseTimeout="${ftp.responseTimeout}" doc:name="FTP"/>
+    </flow>
+</mule>

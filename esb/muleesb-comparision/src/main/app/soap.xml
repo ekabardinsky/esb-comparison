@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/current/mule-cxf.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    <ws:consumer-config name="Web_Service_Consumer" service="PurchaseOrderImplService" port="PurchaseOrderImplPort" serviceAddress="${soap.serviceAddress}" wsdlLocation="${soap.serviceAddress}?wsdl" doc:name="Web Service Consumer"/>
+    <spring:beans>
+        <spring:bean id="LoggingOutInterceptor" name="LoggingOutInterceptor" class="org.apache.cxf.interceptor.LoggingOutInterceptor"/>
+        <spring:bean id="LoggingInInterceptor" name="LoggingInInterceptor" class="org.apache.cxf.interceptor.LoggingInInterceptor"/>
+    </spring:beans>
+    <flow name="outboundSoapFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/soap/outbound" allowedMethods="GET" doc:name="HTTP"/>
+        <set-payload value="#[  '   &lt;ser:pay xmlns:ser=&quot;http://service.soap.magister.ekabardinsky.ru/&quot; xmlns:pur=&quot;http://tempuri.org/PurchaseOrderSchema.xsd&quot;&gt;  '  + 
+ '            &lt;!--Optional:--&gt;  '  + 
+ '            &lt;arg0 orderDate=&quot;2017-03-31T21:32:52&quot; confirmDate=&quot;2017-03-31T21:32:52&quot;&gt;  '  + 
+ '               &lt;pur:shipTo country=&quot;RU&quot;&gt;  '  + 
+ '                  &lt;pur:name&gt;Purchase order&lt;/pur:name&gt;  '  + 
+ '                  &lt;pur:street&gt;50 let oktyabrya&lt;/pur:street&gt;  '  + 
+ '                  &lt;pur:city&gt;Tyumen&lt;/pur:city&gt;  '  + 
+ '                  &lt;pur:state&gt;Tyumen&lt;/pur:state&gt;  '  + 
+ '                  &lt;pur:zip&gt;625013&lt;/pur:zip&gt;  '  + 
+ '               &lt;/pur:shipTo&gt;  '  + 
+ '               &lt;!--Optional:--&gt;  '  + 
+ '               &lt;pur:comment&gt;Some additional information&lt;/pur:comment&gt;  '  + 
+ '               &lt;pur:items&gt;  '  + 
+ '                  &lt;!--Zero or more repetitions:--&gt;  '  + 
+ '                  &lt;pur:item partNum=&quot;1&quot;&gt;  '  + 
+ '                     &lt;pur:productName&gt;Vodka&lt;/pur:productName&gt;  '  + 
+ '                     &lt;pur:quantity&gt;1&lt;/pur:quantity&gt;  '  + 
+ '                     &lt;pur:USPrice&gt;10&lt;/pur:USPrice&gt;  '  + 
+ '                     &lt;pur:comment&gt;Russia, vodka, bear, balalayka&lt;/pur:comment&gt;  '  + 
+ '                     &lt;!--Optional:--&gt;  '  + 
+ '                     &lt;pur:shipDate&gt;2017-03-31T21:32:52&lt;/pur:shipDate&gt;  '  + 
+ '                  &lt;/pur:item&gt;  '  + 
+ '               &lt;/pur:items&gt;  '  + 
+ '            &lt;/arg0&gt;  '  + 
+ '        &lt;/ser:pay&gt;  '  ]" doc:name="Set Payload"/>
+        <ws:consumer config-ref="Web_Service_Consumer" operation="pay" doc:name="Web Service Consumer"/>
+    </flow>
+    <flow name="inboundSoapFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/soap/inbound" doc:name="HTTP"/>
+        <cxf:simple-service serviceClass="ru.ekabardinsky.magister.commons.soap.service.InboundService" doc:name="CXF"/>
+        <set-payload value="#['']" doc:name="Set Payload"/>
+    </flow>
+</mule>
