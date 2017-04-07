@@ -29,7 +29,6 @@ public class TestProperties {
         Random random = new Random();
         for (int i = 0; i < loopSize; i++) {
             State state = new State();
-            state.setSystemTime(random.nextLong());
             state.setUsedMemory(random.nextLong());
             state.setSystemCpuLoad(random.nextDouble());
             stateList.add(state);

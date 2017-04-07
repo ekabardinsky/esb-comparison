@@ -6,7 +6,6 @@ package ru.ekabardinsky.magister.commons.Monitoring;
 public class State {
     private long usedMemory;
     private double systemCpuLoad;
-    private long systemTime;
     private int stateNumber;
 
     public long getUsedMemory() {
@@ -25,14 +24,6 @@ public class State {
         this.systemCpuLoad = systemCpuLoad;
     }
 
-    public long getSystemTime() {
-        return systemTime;
-    }
-
-    public void setSystemTime(long systemTime) {
-        this.systemTime = systemTime;
-    }
-
     public int getStateNumber() {
         return stateNumber;
     }
@@ -44,7 +35,6 @@ public class State {
     public String toString() {
         return "№ " + stateNumber +
                 " UsedMemory: " + usedMemory +
-                " SystemCpu: " + systemCpuLoad +
-                " SystemTime: " + systemTime;
+                " SystemCpu: " + systemCpuLoad;
     }
 }

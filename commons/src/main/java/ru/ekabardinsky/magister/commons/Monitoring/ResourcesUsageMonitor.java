@@ -4,8 +4,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by ekabardinsky on 3/27/17.
@@ -24,7 +23,6 @@ public class ResourcesUsageMonitor {
     //state buffers
     private Object[] freePhysicalMemoryBuffer;
     private Object[] systemCpuLoadBuffer;
-    private long[] systemTimeBuffer;
 
     //dynamic variable
     private int currentPointer;
@@ -49,7 +47,6 @@ public class ResourcesUsageMonitor {
         //commit buffers
         this.freePhysicalMemoryBuffer = new Object[bufferSize];
         this.systemCpuLoadBuffer = new Object[bufferSize];
-        this.systemTimeBuffer = new long[bufferSize];
 
         //runnable for monitoring
         monitorRunnable = () -> {
@@ -59,7 +56,6 @@ public class ResourcesUsageMonitor {
                     //fill state to buffers
                     freePhysicalMemoryBuffer[currentPointer] = freePhysicalMemorySizeGetters.invoke(operatingSystemMXBean);
                     systemCpuLoadBuffer[currentPointer] = processCpuLoadGetters.invoke(operatingSystemMXBean);
-                    systemTimeBuffer[currentPointer] = System.currentTimeMillis();
                     currentPointer++;
 
                     Thread.sleep(sleepInterval);
@@ -106,8 +102,11 @@ public class ResourcesUsageMonitor {
         }
 
         //get start state
-        long startFreePhysicalMemory = (long) freePhysicalMemoryBuffer[0];
-        long startSystemTime = systemTimeBuffer[0];
+        long maximumFreePhysicalMemory = (long) Arrays.stream(freePhysicalMemoryBuffer)
+                .filter(x -> x != null)
+                .max(Comparator.comparingLong(x -> {
+                    return (Long) x;
+                })).get();
 
         List<State> states = new ArrayList<>(currentPointer);
         for (int i = 0; i < this.currentPointer; i++) {
@@ -115,8 +114,7 @@ public class ResourcesUsageMonitor {
             State state = new State();
             state.setStateNumber(i);
             state.setSystemCpuLoad((double) systemCpuLoadBuffer[i]);
-            state.setUsedMemory(startFreePhysicalMemory - (long) freePhysicalMemoryBuffer[i]);
-            state.setSystemTime(systemTimeBuffer[i] - startSystemTime);
+            state.setUsedMemory(maximumFreePhysicalMemory - (long) freePhysicalMemoryBuffer[i]);
 
             states.add(state);
         }
