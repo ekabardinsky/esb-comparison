@@ -3,10 +3,10 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>ru.ekabardinsky.magister</groupId>
-	<artifactId>muleesb-comparision</artifactId>
+	<artifactId>muleesb-comparison</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>mule</packaging>
-	<name>Mule muleesb-comparision Application</name>
+	<name>Mule muleesb-comparison Application</name>
 
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

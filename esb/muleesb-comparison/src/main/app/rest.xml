@@ -13,6 +13,6 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     </flow>
     <flow name="inboundRestFlow">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/rest/inbound" allowedMethods="GET" doc:name="HTTP"/>
-        <set-payload value="#['']" doc:name="Set Payload"/>
+        <set-payload value="#[null]" doc:name="Set Payload"/>
     </flow>
 </mule>

@@ -1,0 +1,25 @@
+server.port: 8089
+spring.main.sources: ru.ekabardinsky.magister.camel.spring.boot.comparison.ComparisonApplication
+
+esb:
+  port: 8088
+  basePath: /api
+  host: localhost
+
+rest:
+  host: localhost
+  port: 8080
+  basePath: /api
+
+soap.serviceAddress: http://localhost:8082/soap-service/PurchaseOrder
+
+ftp:
+  host: 172.18.0.2
+  port: 21
+  path: /
+  username: user
+  password: pass
+
+monitoring:
+  sleep: 100
+  bufferSize: 10000000

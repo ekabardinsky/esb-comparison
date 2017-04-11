@@ -10,8 +10,9 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
     <flow name="outboundFtpFlow">
-        <http:listener config-ref="HTTP_Listener_Configuration" path="/ftp/outbound" doc:name="HTTP"/>
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/ftp/outbound" doc:name="HTTP" allowedMethods="GET"/>
         <set-payload value="#[ru.ekabardinsky.magister.commons.Monitoring.ResourceManager.getTestResource(5000000)]" doc:name="Set Payload"/>
         <ftp:outbound-endpoint host="${ftp.host}" port="${ftp.port}" path="${ftp.path}" user="${ftp.username}" password="${ftp.password}" outputPattern="#['5mb']" responseTimeout="${ftp.responseTimeout}" doc:name="FTP"/>
+        <set-payload value="#[null]" doc:name="Set Payload"/>
     </flow>
 </mule>

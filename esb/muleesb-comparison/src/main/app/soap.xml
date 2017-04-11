@@ -47,6 +47,6 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
     <flow name="inboundSoapFlow">
         <http:listener config-ref="HTTP_Listener_Configuration" path="/soap/inbound" doc:name="HTTP"/>
         <cxf:simple-service serviceClass="ru.ekabardinsky.magister.commons.soap.service.InboundService" doc:name="CXF"/>
-        <set-payload value="#['']" doc:name="Set Payload"/>
+        <set-payload value="#[null]" doc:name="Set Payload"/>
     </flow>
 </mule>
