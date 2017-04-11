@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="1ad147f3-b813-46e8-be82-ee7ee8383893" activeEnvironment="Default" name="inbound" resourceRoot="" soapui-version="5.2.1" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="a0d2c72e-9633-4129-8bd6-b0941f06253b" wsaVersion="NONE" name="InboundServiceServiceSoapBinding" type="wsdl" bindingName="{http://service.soap.commons.magister.ekabardinsky.ru/}InboundServiceServiceSoapBinding" soapVersion="1_1" anonymous="optional" definition="http://localhost:8089/api/soap/inbound?wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://localhost:8089/api/soap/inbound?wsdl"><con:part><con:url>http://localhost:8089/api/soap/inbound?wsdl</con:url><con:content><![CDATA[<wsdl:definitions name="InboundServiceService" targetNamespace="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http">
+  <wsdl:types>
+    <xs:schema elementFormDefault="qualified" targetNamespace="http://tempuri.org/PurchaseOrderSchema.xsd" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://tempuri.org/PurchaseOrderSchema.xsd">
+      <xs:element name="comment" type="xs:string"/>
+      <xs:element name="purchaseOrder" type="tns:PurchaseOrderType"/>
+      <xs:complexType name="PurchaseOrderType">
+        <xs:sequence>
+          <xs:element name="shipTo" type="tns:USAddress"/>
+          <xs:element name="billTo" type="tns:USAddress"/>
+          <xs:element minOccurs="0" name="comment" type="xs:string"/>
+          <xs:element name="items" type="tns:Items"/>
+        </xs:sequence>
+        <xs:attribute name="orderDate" type="xs:date"/>
+        <xs:attribute name="confirmDate" type="xs:date" use="required"/>
+      </xs:complexType>
+      <xs:complexType name="USAddress">
+        <xs:sequence>
+          <xs:element name="name" type="xs:string"/>
+          <xs:element name="street" type="xs:string"/>
+          <xs:element name="city" type="xs:string"/>
+          <xs:element name="state" type="xs:string"/>
+          <xs:element name="zip" type="xs:decimal"/>
+        </xs:sequence>
+        <xs:attribute name="country" type="xs:NMTOKEN"/>
+      </xs:complexType>
+      <xs:complexType name="Items">
+        <xs:sequence>
+          <xs:element maxOccurs="unbounded" minOccurs="0" name="item" nillable="true">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element name="productName" type="xs:string"/>
+                <xs:element name="quantity" type="xs:int"/>
+                <xs:element name="USPrice" type="xs:decimal"/>
+                <xs:element name="comment" type="xs:string"/>
+                <xs:element minOccurs="0" name="shipDate" type="xs:date"/>
+              </xs:sequence>
+              <xs:attribute name="partNum" type="xs:string"/>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+    <xs:schema elementFormDefault="unqualified" targetNamespace="http://service.soap.commons.magister.ekabardinsky.ru/" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ns1="http://tempuri.org/PurchaseOrderSchema.xsd">
+      <xs:import namespace="http://tempuri.org/PurchaseOrderSchema.xsd"/>
+      <xs:element name="test" type="tns:test"/>
+      <xs:element name="testResponse" type="tns:testResponse"/>
+      <xs:complexType name="test">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="arg0" type="ns1:PurchaseOrderType"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="testResponse">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="return" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="test">
+    <wsdl:part element="tns:test" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="testResponse">
+    <wsdl:part element="tns:testResponse" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="InboundService">
+    <wsdl:operation name="test">
+      <wsdl:input message="tns:test" name="test"></wsdl:input>
+      <wsdl:output message="tns:testResponse" name="testResponse"></wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="InboundServiceServiceSoapBinding" type="tns:InboundService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="test">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="test">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="testResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="InboundServiceService">
+    <wsdl:port binding="tns:InboundServiceServiceSoapBinding" name="InboundServicePort">
+      <soap:address location="http://localhost:8089/api/soap/inbound"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://localhost:8089/api/soap/inbound</con:endpoint></con:endpoints><con:operation id="48b9db01-2801-4838-8482-07d124c6ddbd" isOneWay="false" action="" name="test" bindingOperationName="test" type="Request-Response" outputName="testResponse" inputName="test" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="90bcf1fe-4741-46b9-9459-9f9ff0dcda08" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8089/api/soap/inbound</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ser="http://service.soap.commons.magister.ekabardinsky.ru/" xmlns:pur="http://tempuri.org/PurchaseOrderSchema.xsd">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <ser:test>
+         <!--Optional:-->
+         <arg0 orderDate="2017-03-31" confirmDate="2017-03-31">
+            <pur:shipTo country="country">
+               <pur:name>name</pur:name>
+               <pur:street>street</pur:street>
+               <pur:city>city</pur:city>
+               <pur:state>state</pur:state>
+               <pur:zip>1</pur:zip>
+            </pur:shipTo>
+            <pur:billTo country="country">
+               <pur:name>name</pur:name>
+               <pur:street>name</pur:street>
+               <pur:city>city</pur:city>
+               <pur:state>state</pur:state>
+               <pur:zip>1</pur:zip>
+            </pur:billTo>
+            <!--Optional:-->
+            <pur:comment>comment</pur:comment>
+            <pur:items>
+               <!--Zero or more repetitions:-->
+               <pur:item partNum="1">
+                  <pur:productName>productName</pur:productName>
+                  <pur:quantity>1</pur:quantity>
+                  <pur:USPrice>1</pur:USPrice>
+                  <pur:comment>comment</pur:comment>
+                  <!--Optional:-->
+                  <pur:shipDate>2017-03-31</pur:shipDate>
+               </pur:item>
+            </pur:items>
+         </arg0>
+      </ser:test>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://service.soap.commons.magister.ekabardinsky.ru/InboundService/test"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/></con:soapui-project>

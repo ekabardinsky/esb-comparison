@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.TestCasesPropertiesProcessor;
 import ru.ekabardinsky.magister.commons.Monitoring.ResourcesUsageMonitor;
+import ru.ekabardinsky.magister.commons.soap.service.InboundService;
 import ru.ekabardinsky.magister.soap.service.PurchaseOrder;
 
 import java.lang.reflect.InvocationTargetException;
@@ -45,11 +46,19 @@ public class ComparisonApplication {
         CxfEndpoint cxfEndpoint = new CxfEndpoint();
         cxfEndpoint.setDataFormat(DataFormat.POJO);
         cxfEndpoint.setWsdlURL(soapServiceAddress + "?wsdl");
-//        cxfEndpoint.setService("PurchaseOrderImplService");
         cxfEndpoint.setPortName("PurchaseOrderImplPort");
         cxfEndpoint.setAddress(soapServiceAddress);
         cxfEndpoint.setServiceClass(PurchaseOrder.class);
         cxfEndpoint.setDefaultOperationName("pay");
+
+        return cxfEndpoint;
+    }
+
+    @Bean
+    public CxfEndpoint cxfEndpointService() {
+        CxfEndpoint cxfEndpoint = new CxfEndpoint();
+        cxfEndpoint.setServiceClass(InboundService.class);
+        cxfEndpoint.setAddress("/api/soap/inbound");
 
         return cxfEndpoint;
     }

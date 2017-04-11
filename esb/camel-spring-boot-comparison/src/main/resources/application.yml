@@ -1,3 +1,4 @@
+cxf.path: /api
 server.port: 8089
 spring.main.sources: ru.ekabardinsky.magister.camel.spring.boot.comparison.ComparisonApplication
 

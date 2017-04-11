@@ -19,12 +19,15 @@ public class TestCasesPropertiesProcessor implements Processor {
     @Value("${esb.basePath}")
     private String basePath;
 
+    @Value("${server.port}")
+    private String soapPort;
 
     public void process(Exchange exchange) throws Exception {
         HashMap<String, String> placeholder = new HashMap<String, String>();
         placeholder.put("host", host);
         placeholder.put("port", port);
         placeholder.put("basePath", basePath);
+        placeholder.put("soapPort", soapPort);
         exchange.getOut().setBody(placeholder);
     }
 }

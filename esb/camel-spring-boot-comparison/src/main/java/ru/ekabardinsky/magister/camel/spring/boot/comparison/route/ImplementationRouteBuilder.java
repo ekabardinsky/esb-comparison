@@ -1,6 +1,7 @@
 package ru.ekabardinsky.magister.camel.spring.boot.comparison.route;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.component.cxf.CxfEndpoint;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spring.boot.FatJarRouter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,9 @@ public class ImplementationRouteBuilder extends FatJarRouter {
                         "?password=" + ftpPassword +
                         "&binary=true")
                 .setBody(constant(null));
+
+        from("direct:soap.inbound")
+                .setBody(constant(""));
     }
 
     private PurchaseOrderType getExample() {
