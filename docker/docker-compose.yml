@@ -6,7 +6,7 @@ services:
       - "21:21"
       - "30000-30009:30000-30009"
     environment: 
-      PUBLICHOST: localhost
+      PUBLICHOST: 192.168.0.7
   postgresql:
     build: postgresql/
     ports: 
