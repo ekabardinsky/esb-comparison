@@ -13,7 +13,7 @@ import java.util.List;
  * Created by ekabardinsky on 4/3/17.
  */
 public class ResultSender {
-    public void sendResult(ScheduleBoard scheduleBoard, Schedule schedule, List<Long> results) throws IOException {
+    public void sendResult(ScheduleBoard scheduleBoard, Schedule schedule, Object results) throws IOException {
         HashMap<String, Object> result = new HashMap<>();
         result.put("schedule", schedule);
         result.put("results", results);

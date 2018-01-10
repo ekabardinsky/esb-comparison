@@ -12,10 +12,10 @@ rest:
   port: 8080
   basePath: /api
 
-soap.serviceAddress: http://localhost:8082/soap-service/PurchaseOrder
+soap.serviceAddress: http://192.168.0.7:8082/soap-service/PurchaseOrder
 
 ftp:
-  host: 172.18.0.2
+  host: 192.168.0.7
   port: 21
   path: /
   username: user

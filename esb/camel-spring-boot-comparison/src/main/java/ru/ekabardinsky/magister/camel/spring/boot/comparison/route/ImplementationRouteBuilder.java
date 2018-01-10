@@ -1,6 +1,8 @@
 package ru.ekabardinsky.magister.camel.spring.boot.comparison.route;
 
+import com.google.gson.Gson;
 import org.apache.camel.Exchange;
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.component.cxf.CxfEndpoint;
 import org.apache.camel.model.dataformat.JsonLibrary;
 import org.apache.camel.spring.boot.FatJarRouter;
@@ -20,6 +22,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.UUID;
 
 /**
  * Created by ekabardinsky on 4/11/17.
@@ -58,6 +61,9 @@ public class ImplementationRouteBuilder extends FatJarRouter {
     @Autowired
     private ResourcesUsageMonitor resourcesUsageMonitor;
 
+    @Autowired
+    private Gson gson;
+
     public ImplementationRouteBuilder() {
         this.examplePurchaseOrder = getExample();
     }
@@ -66,14 +72,15 @@ public class ImplementationRouteBuilder extends FatJarRouter {
     public void configure() {
         from("direct:testcases")
                 .process(testCasesPropertiesProcessor)
-                .setBody().groovy("resource:classpath:getTestCases.groovy");
+                .setBody().groovy("resource:classpath:getTestCases.groovy")
+                .process(e -> e.getOut().setBody(gson.toJson(e.getIn().getBody())));
 
         from("direct:monitor.start")
-                .process(x -> resourcesUsageMonitor.start());
+                .process(x -> System.out.println("resourcesUsageMonitor.start()"));
 
         from("direct:monitor.stop")
-                .process(x -> resourcesUsageMonitor.stop())
-                .process(x -> x.getOut().setBody(resourcesUsageMonitor.getResult()));
+                .process(x -> System.out.println("resourcesUsageMonitor.stop()"));
+//                .process(x -> x.getOut().setBody(resourcesUsageMonitor.getResult()));
 
         from("direct:rest.inbound")
                 .setBody(constant(null));
@@ -94,15 +101,29 @@ public class ImplementationRouteBuilder extends FatJarRouter {
                 .marshal().jacksonxml();
 
         from("direct:ftp.outbound")
+                .process(e -> System.out.println("started"))
+                .setExchangePattern(ExchangePattern.InOut)
+                .process(e -> resourcesUsageMonitor.start())
                 .removeHeaders("*")
-                .setBody(constant(ResourceManager.getTestResource(5000000)))
-                .setHeader("CamelFileName", constant("5mb"))
+                .process((exchange1 -> System.out.println(exchange1.getIn().getBody())))
+                .process((exchange) -> {
+                    exchange.getOut().setBody(exchange.getIn().getBody());
+                    exchange.getOut().setHeader("CamelFileName", UUID.randomUUID().toString());
+                })
+                .process(e -> System.out.println("File prepared"))
                 .to("ftp://" + ftpUsername +
                         "@" + ftpHost +
                         ":" + ftpPort + ftpPath +
                         "?password=" + ftpPassword +
                         "&binary=true")
-                .setBody(constant(null));
+
+                .process(e -> System.out.println("File sent"))
+                .process(e -> {
+                    resourcesUsageMonitor.stop();
+                    e.getOut().setBody(gson.toJson(resourcesUsageMonitor.getResult()));
+                    e.getOut().getHeader("Content-Type", "application/json");
+                })
+                .process(e -> System.out.println("Stoped"));
 
         from("direct:soap.inbound")
                 .setBody(constant(""));

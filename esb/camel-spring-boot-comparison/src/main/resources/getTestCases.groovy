@@ -47,7 +47,7 @@ def result = [
                         "workerType"          : "Http",
                         "additionalParameters": [
                                 "url"   : baseUrl + "/ftp/outbound",
-                                "method": "GET"
+                                "method": "POST"
                         ]
                 ]
         ]
