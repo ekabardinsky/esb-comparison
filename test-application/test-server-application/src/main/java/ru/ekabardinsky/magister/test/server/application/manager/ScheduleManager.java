@@ -40,7 +40,7 @@ public class ScheduleManager {
                 .collect(Collectors.toList());
     }
 
-    private Schedule generateSchedule(String name, Object delay, Object time) {
+    private Schedule generateSchedule(String name, Long delay, Long time, Long startIndex, Long count, Long sizeStep, Long repeatCount) {
         //create wrappers for time & delay
         Long delayWrapper = Long.valueOf(delay.toString());
         Long timeWrapper = Long.valueOf(time.toString());
@@ -56,7 +56,12 @@ public class ScheduleManager {
         String workerType = (String) currentCase.get("workerType");
         WorkerType workerTypeWrapper = WorkerType.valueOf(workerType);
         LinkedTreeMap additionalParameters = (LinkedTreeMap) currentCase.get("additionalParameters");
+        additionalParameters.put("startIndex", startIndex);
+        additionalParameters.put("count", count);
+        additionalParameters.put("sizeStep", sizeStep);
+        additionalParameters.put("repeatCount", repeatCount);
         HashMap additionalParametersWrapper = new HashMap<>(additionalParameters);
+
 
         //assemble schedule
         Schedule schedule = new Schedule();
@@ -81,9 +86,14 @@ public class ScheduleManager {
 
         List<Schedule> collect = schedules.stream().map(x -> {
             String name = (String) x.get("name");
-            Object delay = x.get("delay");
-            Object time = x.get("time");
-            return generateSchedule(name, delay, time);
+            Long delay = Long.valueOf(x.get("delay").toString());
+            Long time = Long.valueOf(x.get("time").toString());
+            Long startIndex = Long.valueOf(x.get("startIndex").toString());
+            Long count = Long.valueOf(x.get("count").toString());
+            Long sizeStep = Long.valueOf(x.get("sizeStep").toString());
+            Long repeatCount = Long.valueOf(x.get("repeatCount").toString());
+
+            return generateSchedule(name, delay, time, startIndex, count, sizeStep, repeatCount);
         }).collect(Collectors.toList());
 
         scheduleBoard.setSchedules(collect);

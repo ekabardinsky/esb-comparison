@@ -30,7 +30,6 @@ public class WorkerFtpThroughHttpTester extends Worker {
 
     private static final int COUNT = 5;
     private static final int SIZE = 1000;
-    private static final int REPEAT_COUNT = 1;
 
     public WorkerFtpThroughHttpTester(Schedule schedule, ScheduleBoard scheduleBoard) {
         super(schedule, scheduleBoard);
@@ -56,11 +55,17 @@ public class WorkerFtpThroughHttpTester extends Worker {
                 Duration duration = Duration.between(localNow, start);
                 long milliseconds = duration.toMillis();
                 Thread.sleep(milliseconds);
+                Long startIndex = Double.valueOf(additionalParameters.get("startIndex").toString()).longValue();
+                Long count = Double.valueOf(additionalParameters.get("count").toString()).longValue();
+                Long sizeStep = Double.valueOf(additionalParameters.get("sizeStep").toString()).longValue();
+                Long repeatCount = Double.valueOf(additionalParameters.get("repeatCount").toString()).longValue();
+
 
                 //calls to esb
-                for (int i = 0; i < COUNT; i++) {
-                    for (int attempt = 0; attempt < REPEAT_COUNT; attempt++) {
-                        int generateSize = (i + 1) * SIZE;
+                for (Long i = startIndex; i < startIndex + count; i++) {
+                    for (int attempt = 0; attempt < repeatCount; attempt++) {
+                        int generateSize = (int) ((i + 1) * sizeStep);
+                        System.out.println("------------Try to send file " + generateSize + " bytes. Step #" + i + " of " + (startIndex + count) + ". Attempt #" + attempt + " of " + repeatCount);
 
                         //configure request
                         HttpRequestBase request = null;
@@ -116,10 +121,13 @@ public class WorkerFtpThroughHttpTester extends Worker {
                         wrapper.put("size", generateSize);
 
                         results.add(wrapper);
+                        System.out.println("File sent");
                     }
                 }
 
+
                 resultSender.sendResult(scheduleBoard, schedule, results);
+                System.out.println("Experiment done");
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
