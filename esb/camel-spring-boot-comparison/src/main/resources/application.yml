@@ -5,17 +5,17 @@ spring.main.sources: ru.ekabardinsky.magister.camel.spring.boot.comparison.Compa
 esb:
   port: 8088
   basePath: /api
-  host: localhost
+  host: 192.168.0.7
 
 rest:
   host: localhost
   port: 8080
   basePath: /api
 
-soap.serviceAddress: http://192.168.0.7:8082/soap-service/PurchaseOrder
+soap.serviceAddress: http://192.168.0.3:8082/soap-service/PurchaseOrder
 
 ftp:
-  host: 192.168.0.7
+  host: 192.168.0.3
   port: 21
   path: /
   username: user
