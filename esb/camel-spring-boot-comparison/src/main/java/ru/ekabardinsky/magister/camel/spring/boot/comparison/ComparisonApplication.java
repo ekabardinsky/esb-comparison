@@ -1,5 +1,6 @@
 package ru.ekabardinsky.magister.camel.spring.boot.comparison;
 
+import com.google.gson.Gson;
 import org.apache.camel.component.cxf.CxfComponent;
 import org.apache.camel.component.cxf.CxfEndpoint;
 import org.apache.camel.component.cxf.DataFormat;
@@ -24,6 +25,11 @@ public class ComparisonApplication {
 
     @Value("${monitoring.bufferSize}")
     private Integer monitoringBufferSize;
+
+    @Bean
+    public Gson getGson() {
+        return new Gson();
+    }
 
     @Bean
     public TestCasesPropertiesProcessor testCasesPropertiesProcessor() {

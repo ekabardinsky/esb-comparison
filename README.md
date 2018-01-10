@@ -21,3 +21,16 @@ Before run test-server application on Master node you should configure it as fol
 
 # Compare ESB's
 //TODO
+
+# Extract results
+Use follow resource for mapping big experement json to array of results:
+http://www.jsonquerytool.com/#/JavaScript
+
+Esb result:
+`input.esbResults[%testName%][0].results`
+
+Client results:
+`input.clientResults[%testName%][%clientNumber%].results.map(function(x) {return {time: x}})`
+
+You also can map this array of object to csv file (for some calculating reasons):
+http://codebeautify.org/json-to-csv

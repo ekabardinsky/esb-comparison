@@ -34,6 +34,7 @@ public class WorkerHttp extends Worker {
     @Override
     public void doTest(ResultSender resultSender) {
         LocalDateTime start = LocalDateTime.ofInstant(schedule.getStart().toInstant(), ZoneId.systemDefault());
+        List<HashMap<String, Object>> results = new ArrayList<>();
 
         Runnable runnable = () -> {
             try {
@@ -82,29 +83,21 @@ public class WorkerHttp extends Worker {
                 Thread.sleep(milliseconds);
 
                 //calls to esb
-                boolean loop = true;
-                while (loop) {
-                    //prepare call
-                    HttpClient client = HttpClientBuilder.create().build();
+                //prepare call
+                HttpClient client = HttpClientBuilder.create().build();
 
-                    //call
-                    long startTime = System.currentTimeMillis();
-                    HttpResponse execute = client.execute(request);
-                    long endTime = System.currentTimeMillis();
+                //call
+                long startTime = System.currentTimeMillis();
+                HttpResponse execute = client.execute(request);
+                long endTime = System.currentTimeMillis();
 
-                    //check response
-                    if (execute.getStatusLine().getStatusCode() != 200) {
-                        throw new IllegalStateException("Wrong response");
-                    }
-
-                    //record duration
-                    durations.add(endTime - startTime);
-
-                    //check if end is coming
-                    if (new Date().after(schedule.getEndDate())) {
-                        loop = false;
-                    }
+                //check response
+                if (execute.getStatusLine().getStatusCode() != 200) {
+                    throw new IllegalStateException("Wrong response");
                 }
+
+                //record duration
+                durations.add(endTime - startTime);
 
                 resultSender.sendResult(scheduleBoard, schedule, durations);
             } catch (Exception e) {

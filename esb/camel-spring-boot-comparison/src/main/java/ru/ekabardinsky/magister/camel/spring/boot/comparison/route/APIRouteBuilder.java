@@ -19,12 +19,11 @@ public class APIRouteBuilder extends FatJarRouter {
         restConfiguration()
                 .component("restlet")
                 .host("localhost")
-                .port(esbPort)
-                .bindingMode(RestBindingMode.auto);
+                .port(esbPort);
 
         rest("/api")
                 .get("/testcases").to("direct:testcases")
-                .get("/ftp/outbound").to("direct:ftp.outbound")
+                .post("/ftp/outbound").to("direct:ftp.outbound")
                 .get("/monitor/start").to("direct:monitor.start")
                 .get("/monitor/stop").to("direct:monitor.stop")
                 .get("/rest/outbound").to("direct:rest.outbound")
