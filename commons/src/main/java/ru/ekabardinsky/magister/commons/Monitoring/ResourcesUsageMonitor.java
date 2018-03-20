@@ -10,25 +10,32 @@ import java.util.*;
  * Created by ekabardinsky on 3/27/17.
  */
 public class ResourcesUsageMonitor {
-    private OperatingSystemMXBean operatingSystemMXBean;
-    private long sleepInterval;
-    private int bufferSize;
-    private boolean initialized;
-    private Runnable monitorRunnable;
+    private static int CURRENTLY_RUN_MONITORS = 0;
 
-    //getters
-    private Method freePhysicalMemorySizeGetters;
-    private Method processCpuLoadGetters;
+    //usage monitoring sources
+    private OperatingSystemMXBean operatingSystemMXBean;
+    private Runtime runtime;
 
     //state buffers
-    private Object[] freePhysicalMemoryBuffer;
-    private Object[] systemCpuLoadBuffer;
+    private long[] applicationUseMemoryBuffer;
+    private long[] systemUseMemoryBuffer;
+    private long[] freeMemoryBuffer;
+    private long[] swapMemoryBuffer;
+    private double[] applicationCpuLoadBuffer;
+    private double[] systemCpuLoadBuffer;
+    private int[] concurrentlyMonitoringCountBuffer;
 
     //dynamic variable
     private int currentPointer;
     private boolean isMonitoring;
     private Exception monitoringException;
     private Thread monitorThread;
+
+    //additional fields
+    private long sleepInterval;
+    private int bufferSize;
+    private boolean initialized;
+    private Runnable monitorRunnable;
 
     public ResourcesUsageMonitor(long sleepInterval, int bufferSize) {
         this.sleepInterval = sleepInterval;
@@ -37,16 +44,32 @@ public class ResourcesUsageMonitor {
 
     public void initialize() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.operatingSystemMXBean = ManagementFactory.getOperatingSystemMXBean();
+        this.runtime = Runtime.getRuntime();
 
         //prepare getters
-        freePhysicalMemorySizeGetters = operatingSystemMXBean.getClass().getMethod("getFreePhysicalMemorySize");
-        processCpuLoadGetters = operatingSystemMXBean.getClass().getMethod("getProcessCpuLoad");
+        Method freePhysicalMemorySizeGetters = operatingSystemMXBean.getClass().getMethod("getFreePhysicalMemorySize");
+        Method processCpuLoadGetters = operatingSystemMXBean.getClass().getMethod("getProcessCpuLoad");
+        Method systemCpuLoadGetters = operatingSystemMXBean.getClass().getMethod("getSystemCpuLoad");
+        Method totalPhysicalMemorySizeGetters = operatingSystemMXBean.getClass().getMethod("getTotalPhysicalMemorySize");
+        Method totalSwapSpaceSizeGetters = operatingSystemMXBean.getClass().getMethod("getTotalSwapSpaceSize");
+        Method freeSwapSpaceSizeGetters = operatingSystemMXBean.getClass().getMethod("getFreeSwapSpaceSize");
+
+        //make accessible
         freePhysicalMemorySizeGetters.setAccessible(true);
         processCpuLoadGetters.setAccessible(true);
+        systemCpuLoadGetters.setAccessible(true);
+        totalPhysicalMemorySizeGetters.setAccessible(true);
+        totalSwapSpaceSizeGetters.setAccessible(true);
+        freeSwapSpaceSizeGetters.setAccessible(true);
 
-        //commit buffers
-        this.freePhysicalMemoryBuffer = new Object[bufferSize];
-        this.systemCpuLoadBuffer = new Object[bufferSize];
+        //allocate memory for buffers
+        this.applicationUseMemoryBuffer = new long[bufferSize];
+        this.systemUseMemoryBuffer = new long[bufferSize];
+        this.freeMemoryBuffer = new long[bufferSize];
+        this.applicationCpuLoadBuffer = new double[bufferSize];
+        this.systemCpuLoadBuffer = new double[bufferSize];
+        this.concurrentlyMonitoringCountBuffer = new int[bufferSize];
+        this.swapMemoryBuffer = new long[bufferSize];
 
         //runnable for monitoring
         monitorRunnable = () -> {
@@ -54,8 +77,20 @@ public class ResourcesUsageMonitor {
             try {
                 while (isMonitoring) {
                     //fill state to buffers
-                    freePhysicalMemoryBuffer[currentPointer] = freePhysicalMemorySizeGetters.invoke(operatingSystemMXBean);
-                    systemCpuLoadBuffer[currentPointer] = processCpuLoadGetters.invoke(operatingSystemMXBean);
+                    //kinds of cpu
+                    applicationCpuLoadBuffer[currentPointer] = (double) processCpuLoadGetters.invoke(operatingSystemMXBean);
+                    systemCpuLoadBuffer[currentPointer] = (double) systemCpuLoadGetters.invoke(operatingSystemMXBean);
+
+                    //kinds of memory
+                    freeMemoryBuffer[currentPointer] = (long) freePhysicalMemorySizeGetters.invoke(operatingSystemMXBean);
+                    systemUseMemoryBuffer[currentPointer] = (long) totalPhysicalMemorySizeGetters.invoke(operatingSystemMXBean) // available memory
+                            - freeMemoryBuffer[currentPointer] // free memory
+                            - runtime.totalMemory(); // jvm used memory
+                    applicationUseMemoryBuffer[currentPointer] = runtime.totalMemory();
+                    swapMemoryBuffer[currentPointer] = (long) totalSwapSpaceSizeGetters.invoke(operatingSystemMXBean) - (long) freeSwapSpaceSizeGetters.invoke(operatingSystemMXBean);
+                    concurrentlyMonitoringCountBuffer[currentPointer] = CURRENTLY_RUN_MONITORS;
+
+                    // increment pointer
                     currentPointer++;
 
                     Thread.sleep(sleepInterval);
@@ -78,6 +113,7 @@ public class ResourcesUsageMonitor {
             throw new IllegalStateException("Resources monitor not initialized");
         }
         isMonitoring = true;
+        CURRENTLY_RUN_MONITORS++;
 
         //start monitoring in new thread
         this.monitorThread = new Thread(monitorRunnable);
@@ -87,6 +123,7 @@ public class ResourcesUsageMonitor {
 
     public void stop() {
         isMonitoring = false;
+        CURRENTLY_RUN_MONITORS--;
     }
 
     public List<State> getResult() throws Exception {
@@ -101,20 +138,19 @@ public class ResourcesUsageMonitor {
             throw new IllegalArgumentException("No one recorded states");
         }
 
-        //get start state
-        long maximumFreePhysicalMemory = (long) Arrays.stream(freePhysicalMemoryBuffer)
-                .filter(x -> x != null)
-                .max(Comparator.comparingLong(x -> {
-                    return (Long) x;
-                })).get();
-
         List<State> states = new ArrayList<>(currentPointer);
         for (int i = 0; i < this.currentPointer; i++) {
             //create state POJO by buffers data
             State state = new State();
             state.setStateNumber(i);
-            state.setSystemCpuLoad((double) systemCpuLoadBuffer[i]);
-            state.setUsedMemory(maximumFreePhysicalMemory - (long) freePhysicalMemoryBuffer[i]);
+
+            // fill state by buffers
+            state.setApplicationUseMemory(applicationUseMemoryBuffer[i]);
+            state.setSystemUseMemory(systemUseMemoryBuffer[i]);
+            state.setFreeMemory(freeMemoryBuffer[i]);
+            state.setSwapUseMemory(swapMemoryBuffer[i]);
+            state.setApplicationCpuLoad(applicationCpuLoadBuffer[i]);
+            state.setSystemCpuLoad(systemCpuLoadBuffer[i]);
 
             states.add(state);
         }

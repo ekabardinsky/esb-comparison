@@ -29,14 +29,12 @@ public class TestProperties {
         Random random = new Random();
         for (int i = 0; i < loopSize; i++) {
             State state = new State();
-            state.setUsedMemory(random.nextLong());
-            state.setSystemCpuLoad(random.nextDouble());
             stateList.add(state);
         }
         resourcesUsageMonitor.stop();
         List<State> result = resourcesUsageMonitor.getResult();
 
-        State max = result.stream().max(Comparator.comparingLong(x -> x.getUsedMemory())).get();
+        State max = result.stream().max(Comparator.comparingLong(State::getApplicationUseMemory)).get();
         System.out.println(max);
         System.out.println("----------------Created states: " + result.size() + " ---- with " + stateList.size() + " fake object ----------");
 
