@@ -37,6 +37,19 @@ public class ResourcesUsageMonitor {
     private boolean initialized;
     private Runnable monitorRunnable;
 
+    private static synchronized void registerMonitor() {
+        CURRENTLY_RUN_MONITORS++;
+    }
+
+
+    private static synchronized void unregisterMonitor() {
+        CURRENTLY_RUN_MONITORS--;
+    }
+
+    private static synchronized int countRunningMonitors() {
+        return CURRENTLY_RUN_MONITORS;
+    }
+
     public ResourcesUsageMonitor(long sleepInterval, int bufferSize) {
         this.sleepInterval = sleepInterval;
         this.bufferSize = bufferSize;
@@ -88,7 +101,7 @@ public class ResourcesUsageMonitor {
                             - runtime.totalMemory(); // jvm used memory
                     applicationUseMemoryBuffer[currentPointer] = runtime.totalMemory();
                     swapMemoryBuffer[currentPointer] = (long) totalSwapSpaceSizeGetters.invoke(operatingSystemMXBean) - (long) freeSwapSpaceSizeGetters.invoke(operatingSystemMXBean);
-                    concurrentlyMonitoringCountBuffer[currentPointer] = CURRENTLY_RUN_MONITORS;
+                    concurrentlyMonitoringCountBuffer[currentPointer] = countRunningMonitors();
 
                     // increment pointer
                     currentPointer++;
@@ -99,6 +112,8 @@ public class ResourcesUsageMonitor {
                 isMonitoring = false;
                 monitoringException = exception;
             }
+
+            unregisterMonitor();
         };
 
         this.initialized = true;
@@ -113,7 +128,7 @@ public class ResourcesUsageMonitor {
             throw new IllegalStateException("Resources monitor not initialized");
         }
         isMonitoring = true;
-        CURRENTLY_RUN_MONITORS++;
+        registerMonitor();
 
         //start monitoring in new thread
         this.monitorThread = new Thread(monitorRunnable);
@@ -123,7 +138,6 @@ public class ResourcesUsageMonitor {
 
     public void stop() {
         isMonitoring = false;
-        CURRENTLY_RUN_MONITORS--;
     }
 
     public List<State> getResult() throws Exception {
@@ -151,6 +165,7 @@ public class ResourcesUsageMonitor {
             state.setSwapUseMemory(swapMemoryBuffer[i]);
             state.setApplicationCpuLoad(applicationCpuLoadBuffer[i]);
             state.setSystemCpuLoad(systemCpuLoadBuffer[i]);
+            state.setConcurrentlyMonitoringCount(concurrentlyMonitoringCountBuffer[i]);
 
             states.add(state);
         }

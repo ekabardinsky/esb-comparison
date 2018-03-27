@@ -14,29 +14,31 @@ import java.util.Random;
  */
 public class TestProperties {
     public static void main(String... ars) throws Exception {
-        ResourcesUsageMonitor resourcesUsageMonitor = new ResourcesUsageMonitor(10, 10000);
-        resourcesUsageMonitor.initialize();
-
         for( int i = 0 ; i < 10; i++) {
-            printStates(resourcesUsageMonitor, 1000000);
+            new Thread(() -> {
+                ResourcesUsageMonitor resourcesUsageMonitor = new ResourcesUsageMonitor(10, 10000);
+                try {
+                    resourcesUsageMonitor.initialize();
+                    printStates(resourcesUsageMonitor);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+            }).start();
         }
     }
 
-    public static void printStates(ResourcesUsageMonitor resourcesUsageMonitor, int loopSize) throws Exception {
+    public static void printStates(ResourcesUsageMonitor resourcesUsageMonitor) throws Exception {
         resourcesUsageMonitor.start();
 
-        List<State> stateList = new ArrayList<>();
-        Random random = new Random();
-        for (int i = 0; i < loopSize; i++) {
-            State state = new State();
-            stateList.add(state);
-        }
+        Thread.sleep(1000);
+
         resourcesUsageMonitor.stop();
         List<State> result = resourcesUsageMonitor.getResult();
 
-        State max = result.stream().max(Comparator.comparingLong(State::getApplicationUseMemory)).get();
-        System.out.println(max);
-        System.out.println("----------------Created states: " + result.size() + " ---- with " + stateList.size() + " fake object ----------");
+        result.forEach(System.out::println);
+
+        System.out.println("----------------Created states: " + result.size() + " ----------");
 
     }
 }
