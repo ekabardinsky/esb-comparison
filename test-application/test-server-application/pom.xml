@@ -8,6 +8,7 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.0.2.RELEASE</version>
     </parent>
+    
     <artifactId>test-server-application</artifactId>
     <groupId>ru.ekabardinsky.magister</groupId>
     <packaging>war</packaging>

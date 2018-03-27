@@ -18,13 +18,13 @@ public class AssembleResponseProcessor implements Processor {
 
         List<State> result = monitor.getResult();
 
-        long applicationUseMemory = result.get(0).getApplicationUseMemory();
-        long systemUseMemory = result.get(0).getSystemUseMemory();
-        long freeMemory = result.get(0).getFreeMemory();
-        long swapUseMemory = result.get(0).getSwapUseMemory();
-        double applicationCpuLoad = result.get(0).getApplicationCpuLoad();
-        double systemCpuLoad = result.get(0).getSystemCpuLoad();
-        int concurrentlyMonitoringCount = result.get(0).getConcurrentlyMonitoringCount();
+        long applicationUseMemory = result.stream().mapToLong(x->x.getApplicationUseMemory()).max().getAsLong();
+        long systemUseMemory = result.stream().mapToLong(x->x.getSystemUseMemory()).max().getAsLong();
+        long freeMemory = result.stream().mapToLong(x->x.getFreeMemory()).min().getAsLong();
+        long swapUseMemory = result.stream().mapToLong(x->x.getSwapUseMemory()).max().getAsLong();
+        double applicationCpuLoad = result.stream().mapToDouble(x -> x.getApplicationCpuLoad()).average().getAsDouble();
+        double systemCpuLoad = result.stream().mapToDouble(x->x.getSystemCpuLoad()).average().getAsDouble();
+        long concurrentlyMonitoringCount = result.stream().mapToLong(x->x.getConcurrentlyMonitoringCount()).max().getAsLong();
 
         exchange.getOut().setHeader("applicationUseMemory", applicationUseMemory);
         exchange.getOut().setHeader("systemUseMemory", systemUseMemory);

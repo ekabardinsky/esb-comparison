@@ -1,6 +1,7 @@
 package ru.ekabardinsky.magister.test.server.application.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.ekabardinsky.magister.test.server.application.manager.ResultManager;
@@ -21,5 +22,10 @@ public class ResultController {
     @RequestMapping(method = GET, value = "/api/result")
     public ResultWrapper getResult() throws IOException {
         return resultManager.getStore();
+    }
+
+    @RequestMapping(method = GET, value = "/api/result/csv/{case}")
+    public ResultWrapper getCsvResult(@PathVariable(value="case") String testCase) throws IOException {
+        return resultManager.getStoreAsCsv(testCase);
     }
 }

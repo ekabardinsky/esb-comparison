@@ -40,13 +40,9 @@ public class ScheduleManager {
                 .collect(Collectors.toList());
     }
 
-    private Schedule generateSchedule(String name, Long delay, Long time, Long startIndex, Long count, Long sizeStep, Long repeatCount) {
-        //create wrappers for time & delay
-        Long delayWrapper = Long.valueOf(delay.toString());
-        Long timeWrapper = Long.valueOf(time.toString());
-
+    private Schedule generateSchedule(String name, Long delay, Long columnsCountStart, Long columnsCountEnd, Long rowsCountStart, Long rowsCountEnd, List<String> serializeTypes) {
         //get needed test case
-        HashMap root = (HashMap) esbManager.getEsbDescription();
+        HashMap root = esbManager.getEsbDescription();
         List<LinkedTreeMap> testCases = (List<LinkedTreeMap>) root.get("testCases");
         LinkedTreeMap currentCase = testCases.stream()
                 .filter(x -> name.equals(x.get("name")))
@@ -56,10 +52,14 @@ public class ScheduleManager {
         String workerType = (String) currentCase.get("workerType");
         WorkerType workerTypeWrapper = WorkerType.valueOf(workerType);
         LinkedTreeMap additionalParameters = (LinkedTreeMap) currentCase.get("additionalParameters");
-        additionalParameters.put("startIndex", startIndex);
-        additionalParameters.put("count", count);
-        additionalParameters.put("sizeStep", sizeStep);
-        additionalParameters.put("repeatCount", repeatCount);
+
+        // map additional params
+        additionalParameters.put("columnsCountStart", columnsCountStart);
+        additionalParameters.put("columnsCountEnd", columnsCountEnd);
+        additionalParameters.put("rowsCountStart", rowsCountStart);
+        additionalParameters.put("rowsCountEnd", rowsCountEnd);
+        additionalParameters.put("serializeTypes", serializeTypes);
+
         HashMap additionalParametersWrapper = new HashMap<>(additionalParameters);
 
 
@@ -68,14 +68,7 @@ public class ScheduleManager {
         schedule.setAdditionalParameters(additionalParametersWrapper);
         schedule.setWorkerType(workerTypeWrapper);
         schedule.setName(name);
-
-        //date calculating
-        Instant now = new Date().toInstant();
-        Instant start = now.plusMillis(delayWrapper);
-        Instant end = now.plusMillis(delayWrapper + timeWrapper);
-
-        schedule.setStart(Date.from(start));
-        schedule.setEndDate(Date.from(end));
+        schedule.setDelay(delay);
 
         return schedule;
     }
@@ -87,13 +80,14 @@ public class ScheduleManager {
         List<Schedule> collect = schedules.stream().map(x -> {
             String name = (String) x.get("name");
             Long delay = Long.valueOf(x.get("delay").toString());
-            Long time = Long.valueOf(x.get("time").toString());
-            Long startIndex = Long.valueOf(x.get("startIndex").toString());
-            Long count = Long.valueOf(x.get("count").toString());
-            Long sizeStep = Long.valueOf(x.get("sizeStep").toString());
-            Long repeatCount = Long.valueOf(x.get("repeatCount").toString());
+            Long columnsCountStart = Long.valueOf(x.get("columnsCountStart").toString());
+            Long columnsCountEnd = Long.valueOf(x.get("columnsCountEnd").toString());
+            Long rowsCountStart = Long.valueOf(x.get("rowsCountStart").toString());
+            Long rowsCountEnd = Long.valueOf(x.get("rowsCountEnd").toString());
+            List<String> serializeTypes = (List<String>) x.get("serializeType");
 
-            return generateSchedule(name, delay, time, startIndex, count, sizeStep, repeatCount);
+
+            return generateSchedule(name, delay, columnsCountStart, columnsCountEnd, rowsCountStart, rowsCountEnd, serializeTypes);
         }).collect(Collectors.toList());
 
         scheduleBoard.setSchedules(collect);

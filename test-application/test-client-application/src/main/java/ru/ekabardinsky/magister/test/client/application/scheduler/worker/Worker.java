@@ -25,6 +25,8 @@ public abstract class Worker {
     public static Worker getInstance(Schedule schedule, ScheduleBoard scheduleBoard) {
         if (WorkerType.Http.equals(schedule.getWorkerType())) {
             return new WorkerFtpThroughHttpTester(schedule, scheduleBoard);
+        } else if (WorkerType.JDBC.equals(schedule.getWorkerType())) {
+            return new WorkerJDBCThroughHttpTester(schedule, scheduleBoard);
         }
         throw new IllegalArgumentException("Have not worker for test case " + schedule.getWorkerType());
     }

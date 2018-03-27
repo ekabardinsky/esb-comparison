@@ -62,4 +62,10 @@ public class ResultManager {
     public ResultWrapper getStore() {
         return store;
     }
+
+    public ResultWrapper getStoreAsCsv(String testCase) {
+        HashMap<String, Object> store = (HashMap<String, Object>) getStore().getClientResults().get(testCase);
+
+        return getStore();
+    }
 }

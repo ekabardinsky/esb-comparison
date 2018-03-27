@@ -14,8 +14,6 @@ import java.util.List;
 public class TestSerialization {
     public static void main(String [] args) {
         Schedule schedule = new Schedule();
-        schedule.setEndDate(new Date());
-        schedule.setStart(new Date());
         schedule.setWorkerType(WorkerType.Http);
         ScheduleBoard scheduleBoard = new ScheduleBoard();
         scheduleBoard.getSchedules().add(schedule);

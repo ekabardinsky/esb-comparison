@@ -37,7 +37,6 @@ public class WorkerFtpThroughHttpTester extends Worker {
 
     @Override
     public void doTest(ResultSender resultSender) {
-        LocalDateTime start = LocalDateTime.ofInstant(schedule.getStart().toInstant(), ZoneId.systemDefault());
         List<HashMap<String, Object>> results = new ArrayList<>();
 
         Runnable runnable = () -> {
@@ -50,11 +49,6 @@ public class WorkerFtpThroughHttpTester extends Worker {
                 String url = (String) additionalParameters.get("url");
 
 
-                //sleep upon start date
-                LocalDateTime localNow = LocalDateTime.now();
-                Duration duration = Duration.between(localNow, start);
-                long milliseconds = duration.toMillis();
-                Thread.sleep(milliseconds);
                 Long startIndex = Double.valueOf(additionalParameters.get("startIndex").toString()).longValue();
                 Long count = Double.valueOf(additionalParameters.get("count").toString()).longValue();
                 Long sizeStep = Double.valueOf(additionalParameters.get("sizeStep").toString()).longValue();

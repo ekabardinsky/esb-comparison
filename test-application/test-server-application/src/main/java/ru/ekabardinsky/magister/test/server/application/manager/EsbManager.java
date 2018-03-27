@@ -48,27 +48,13 @@ public class EsbManager {
 
         //every schedule run in their own thread
         scheduleBoard.getSchedules().forEach(x -> {
-            //schedule start time
-            LocalDateTime start = LocalDateTime.ofInstant(x.getStart().toInstant(), ZoneId.systemDefault());
-            LocalDateTime end = LocalDateTime.ofInstant(x.getEndDate().toInstant(), ZoneId.systemDefault());
-
             Runnable monitoringTask = () -> {
                 try {
                     //sleep upon start date
-                    LocalDateTime localNow = LocalDateTime.now();
-                    Duration duration = Duration.between(localNow, start);
-                    long milliseconds = duration.toMillis();
-                    Thread.sleep(milliseconds);
+                    Thread.sleep(x.getDelay());
 
                     //main action, just start esb monitoring
                     httpClient.get(url);
-
-                    //sleep upon stop action needed
-                    localNow = LocalDateTime.now();
-                    duration = Duration.between(localNow, end);
-                    milliseconds = duration.toMillis();
-                    Thread.sleep(milliseconds);
-                    stop(x);
                 } catch (Exception e) {
                     e.printStackTrace();
                     hasStarted = false;

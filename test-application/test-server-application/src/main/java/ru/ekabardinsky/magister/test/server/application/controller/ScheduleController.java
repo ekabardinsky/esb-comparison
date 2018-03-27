@@ -41,7 +41,7 @@ public class ScheduleController {
         if (checkTestAvailable(schedules)) {
             ScheduleBoard scheduleBoard = scheduleManager.generateScheduleBoard(schedules);
             clientManager.sendScheduleBoard(scheduleBoard);
-            esbManager.start(scheduleBoard);
+           // esbManager.start(scheduleBoard);
             response.put("status", "OK");
         } else {
             response.put("status", "ERROR");

@@ -9,9 +9,8 @@ import java.util.UUID;
  */
 public class Schedule {
     private UUID id;
-    private Date start;
+    private long delay;
     private WorkerType workerType;
-    private Date endDate;
     private String name;
     private HashMap<String, Object> additionalParameters;
 
@@ -19,12 +18,12 @@ public class Schedule {
         id = UUID.randomUUID();
     }
 
-    public Date getStart() {
-        return start;
+    public long getDelay() {
+        return delay;
     }
 
-    public void setStart(Date start) {
-        this.start = start;
+    public void setDelay(long delay) {
+        this.delay = delay;
     }
 
     public WorkerType getWorkerType() {
@@ -33,14 +32,6 @@ public class Schedule {
 
     public void setWorkerType(WorkerType workerType) {
         this.workerType = workerType;
-    }
-
-    public Date getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
     }
 
     public String getName() {
