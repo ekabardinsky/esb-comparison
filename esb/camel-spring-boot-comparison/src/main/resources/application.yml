@@ -1,6 +1,5 @@
 cxf.path: /api
 server.port: 8089
-spring.main.sources: ru.ekabardinsky.magister.camel.spring.boot.comparison.ComparisonApplication
 
 esb:
   port: 8088
@@ -24,3 +23,9 @@ ftp:
 monitoring:
   sleep: 100
   bufferSize: 10000000
+
+db:
+  username: postgres
+  password: password
+  url: jdbc:postgresql://192.168.0.3:5432/postgres
+  driverClassName: org.postgresql.Driver

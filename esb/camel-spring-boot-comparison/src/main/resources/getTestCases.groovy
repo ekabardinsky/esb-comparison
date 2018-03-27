@@ -49,6 +49,14 @@ def result = [
                                 "url"   : baseUrl + "/ftp/outbound",
                                 "method": "POST"
                         ]
+                ],
+                [
+                        "name"                : "read-jdbc",
+                        "workerType"          : "JDBC",
+                        "additionalParameters": [
+                                "url"   : baseUrl + "/jdbc/read",
+                                "method": "POST"
+                        ]
                 ]
         ]
 ];

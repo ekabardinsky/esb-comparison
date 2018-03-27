@@ -3,17 +3,18 @@ package ru.ekabardinsky.magister.camel.spring.boot.comparison.route;
 import com.google.gson.Gson;
 import org.apache.camel.Exchange;
 import org.apache.camel.ExchangePattern;
-import org.apache.camel.component.cxf.CxfEndpoint;
+import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.model.dataformat.JsonLibrary;
-import org.apache.camel.spring.boot.FatJarRouter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.tempuri.purchaseorderschema.Items;
 import org.tempuri.purchaseorderschema.PurchaseOrderType;
 import org.tempuri.purchaseorderschema.USAddress;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.AssembleResponseProcessor;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.JdbcAssembleQueryProcessor;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.MonitorCreationProcessor;
 import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.TestCasesPropertiesProcessor;
-import ru.ekabardinsky.magister.commons.Monitoring.ResourceManager;
 import ru.ekabardinsky.magister.commons.Monitoring.ResourcesUsageMonitor;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -28,7 +29,7 @@ import java.util.UUID;
  * Created by ekabardinsky on 4/11/17.
  */
 @Component
-public class ImplementationRouteBuilder extends FatJarRouter {
+public class ImplementationRouteBuilder extends RouteBuilder {
     private PurchaseOrderType examplePurchaseOrder;
 
     @Value("${rest.host}")
@@ -57,6 +58,15 @@ public class ImplementationRouteBuilder extends FatJarRouter {
 
     @Autowired
     private TestCasesPropertiesProcessor testCasesPropertiesProcessor;
+
+    @Autowired
+    private JdbcAssembleQueryProcessor jdbcAssembleQueryProcessor;
+
+    @Autowired
+    private MonitorCreationProcessor monitorCreationProcessor;
+
+    @Autowired
+    private AssembleResponseProcessor assembleResponseProcessor;
 
     @Autowired
     private ResourcesUsageMonitor resourcesUsageMonitor;
@@ -93,13 +103,6 @@ public class ImplementationRouteBuilder extends FatJarRouter {
                         restBasePath + "/rest/post")
                 .unmarshal().json(JsonLibrary.Gson);
 
-        from("direct:soap.outbound")
-                .removeHeaders("*")
-                .setBody(constant(examplePurchaseOrder))
-                .to("cxf:bean:cxfEndpoint")
-                .transform(simple("${body[0]}"))
-                .marshal().jacksonxml();
-
         from("direct:ftp.outbound")
                 .process(e -> System.out.println("started"))
                 .setExchangePattern(ExchangePattern.InOut)
@@ -125,8 +128,30 @@ public class ImplementationRouteBuilder extends FatJarRouter {
                 })
                 .process(e -> System.out.println("Stoped"));
 
-        from("direct:soap.inbound")
-                .setBody(constant(""));
+        from("direct:jdbc.read")
+                .setExchangePattern(ExchangePattern.InOut)
+                .process(jdbcAssembleQueryProcessor)
+                .process(monitorCreationProcessor)
+                .to("jdbc:dataSource")
+                .choice()
+                    .when(property("serializeType").isEqualTo("JSON")).to("direct:toJson")
+                    .when(property("serializeType").isEqualTo("XML")).to("direct:toXml")
+                    .when(property("serializeType").isEqualTo("CSV")).to("direct:toCsv");
+
+        from("direct:toJson")
+                .setExchangePattern(ExchangePattern.InOut)
+                .marshal().json(JsonLibrary.Gson)
+                .to("direct:assembleResult");
+        from("direct:toXml")
+                .marshal().jacksonxml()
+                .to("direct:assembleResult");
+        from("direct:toCsv")
+                .marshal().csv()
+                .to("direct:assembleResult");
+
+        from("direct:assembleResult")
+                .process(assembleResponseProcessor);
+
     }
 
     private PurchaseOrderType getExample() {

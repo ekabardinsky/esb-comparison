@@ -1,19 +1,16 @@
 package ru.ekabardinsky.magister.camel.spring.boot.comparison;
 
 import com.google.gson.Gson;
-import org.apache.camel.component.cxf.CxfComponent;
-import org.apache.camel.component.cxf.CxfEndpoint;
-import org.apache.camel.component.cxf.DataFormat;
-import org.apache.camel.spi.RestConsumerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.AssembleResponseProcessor;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.JdbcAssembleQueryProcessor;
+import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.MonitorCreationProcessor;
 import ru.ekabardinsky.magister.camel.spring.boot.comparison.processor.TestCasesPropertiesProcessor;
 import ru.ekabardinsky.magister.commons.Monitoring.ResourcesUsageMonitor;
-import ru.ekabardinsky.magister.commons.soap.service.InboundService;
-import ru.ekabardinsky.magister.soap.service.PurchaseOrder;
-
-import java.lang.reflect.InvocationTargetException;
 
 @SpringBootApplication
 public class ComparisonApplication {
@@ -25,6 +22,18 @@ public class ComparisonApplication {
 
     @Value("${monitoring.bufferSize}")
     private Integer monitoringBufferSize;
+
+    @Value("${db.username}")
+    private String username;
+
+    @Value("${db.password}")
+    private String password;
+
+    @Value("${db.url}")
+    private String url;
+
+    @Value("${db.driverClassName}")
+    private String driverClassName;
 
     @Bean
     public Gson getGson() {
@@ -48,24 +57,29 @@ public class ComparisonApplication {
     }
 
     @Bean
-    public CxfEndpoint cxfEndpoint() {
-        CxfEndpoint cxfEndpoint = new CxfEndpoint();
-        cxfEndpoint.setDataFormat(DataFormat.POJO);
-        cxfEndpoint.setWsdlURL(soapServiceAddress + "?wsdl");
-        cxfEndpoint.setPortName("PurchaseOrderImplPort");
-        cxfEndpoint.setAddress(soapServiceAddress);
-        cxfEndpoint.setServiceClass(PurchaseOrder.class);
-        cxfEndpoint.setDefaultOperationName("pay");
+    public DriverManagerDataSource dataSource() {
+        DriverManagerDataSource dataSource = new DriverManagerDataSource(url, username, password);
+        dataSource.setDriverClassName(driverClassName);
 
-        return cxfEndpoint;
+        return dataSource;
     }
 
     @Bean
-    public CxfEndpoint cxfEndpointService() {
-        CxfEndpoint cxfEndpoint = new CxfEndpoint();
-        cxfEndpoint.setServiceClass(InboundService.class);
-        cxfEndpoint.setAddress("/api/soap/inbound");
+    public JdbcAssembleQueryProcessor jdbcAssembleQueryProcessor() {
+        return new JdbcAssembleQueryProcessor();
+    }
 
-        return cxfEndpoint;
+    @Bean
+    public MonitorCreationProcessor monitorCreationProcessor() {
+        return new MonitorCreationProcessor();
+    }
+
+    @Bean
+    public AssembleResponseProcessor assembleResponseProcessor() {
+        return new AssembleResponseProcessor();
+    }
+
+    public static void main(String[] args) throws Exception {
+        SpringApplication.run(ComparisonApplication.class, args);
     }
 }
