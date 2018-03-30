@@ -4,7 +4,7 @@ server.port: 8089
 esb:
   port: 8088
   basePath: /api
-  host: localhost
+  host: 192.168.0.4
 
 rest:
   host: localhost

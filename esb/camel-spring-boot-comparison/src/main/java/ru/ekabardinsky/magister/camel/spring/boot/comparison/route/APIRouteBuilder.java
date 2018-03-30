@@ -16,7 +16,7 @@ public class APIRouteBuilder extends RouteBuilder {
     public void configure() {
         restConfiguration()
                 .component("restlet")
-                .host("localhost")
+                .host("0.0.0.0")
                 .port(esbPort);
 
         rest("/api")

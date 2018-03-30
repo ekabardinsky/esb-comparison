@@ -60,8 +60,8 @@ public class WorkerJDBCThroughHttpTester extends Worker {
 
                 //calls to esb
                 for(String serializeType : serializeTypes) {
-                    for (int columnsCount = columnsCountStart; columnsCount <= columnsCountEnd; columnsCount++) {
-                        for (int rowsCount = rowsCountStart; rowsCount <= rowsCountEnd; rowsCount++) {
+                    for (int columnsCount = columnsCountStart; columnsCount <= columnsCountEnd; columnsCount+= 5) {
+                        for (int rowsCount = rowsCountStart; rowsCount <= rowsCountEnd; rowsCount+=100) {
                             System.out.println("------------Try to read data from db. Columns count " + columnsCount + ". Rows count " + rowsCount + ". Serialize to " + serializeType);
 
                             //configure request
