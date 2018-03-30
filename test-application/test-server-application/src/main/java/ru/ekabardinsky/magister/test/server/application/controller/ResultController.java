@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.ekabardinsky.magister.test.server.application.manager.ResultManager;
 import ru.ekabardinsky.magister.test.server.application.model.ResultWrapper;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -24,8 +25,9 @@ public class ResultController {
         return resultManager.getStore();
     }
 
-    @RequestMapping(method = GET, value = "/api/result/csv/{case}")
-    public ResultWrapper getCsvResult(@PathVariable(value="case") String testCase) throws IOException {
-        return resultManager.getStoreAsCsv(testCase);
+    @RequestMapping(method = GET, value = "/api/result/{case}.csv")
+    public void getCsvResult(@PathVariable(value = "case") String testCase, HttpServletResponse response) throws IOException {
+        response.setContentType("text/csv; charset=utf-8");
+        response.getWriter().append(resultManager.getStoreAsCsv(testCase));
     }
 }

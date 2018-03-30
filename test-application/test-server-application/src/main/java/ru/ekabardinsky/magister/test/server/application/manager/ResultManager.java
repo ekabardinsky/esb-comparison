@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static java.util.stream.Collectors.toList;
+
 /**
  * Created by ekabardinsky on 4/4/17.
  */
@@ -63,9 +65,35 @@ public class ResultManager {
         return store;
     }
 
-    public ResultWrapper getStoreAsCsv(String testCase) {
-        HashMap<String, Object> store = (HashMap<String, Object>) getStore().getClientResults().get(testCase);
+    public StringBuffer getStoreAsCsv(String testCase) {
+        List<Map<String, Object>> resultList = new ArrayList<>();
 
-        return getStore();
+        List<Map<String, Object>> completedTests = (List<Map<String, Object>>) getStore()
+                .getClientResults()
+                .get(testCase);
+
+        completedTests.forEach(test -> {
+            if (test.containsKey("results")) {
+                resultList.addAll((Collection<? extends Map<String, Object>>) test.get("results"));
+            }
+        });
+
+        return toCSV(resultList);
+    }
+
+    private static StringBuffer toCSV(List<Map<String, Object>> list) {
+        List<String> headers = list.stream().flatMap(map -> map.keySet().stream()).distinct().collect(toList());
+        final StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < headers.size(); i++) {
+            sb.append(headers.get(i));
+            sb.append(i == headers.size() - 1 ? "\n" : ";");
+        }
+        for (Map<String, Object> map : list) {
+            for (int i = 0; i < headers.size(); i++) {
+                sb.append(map.get(headers.get(i)));
+                sb.append(i == headers.size() - 1 ? "\n" : ";");
+            }
+        }
+        return sb;
     }
 }
