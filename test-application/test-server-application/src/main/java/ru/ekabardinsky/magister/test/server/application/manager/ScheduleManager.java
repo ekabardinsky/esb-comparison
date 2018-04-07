@@ -40,7 +40,15 @@ public class ScheduleManager {
                 .collect(Collectors.toList());
     }
 
-    private Schedule generateSchedule(String name, Long delay, Long columnsCountStart, Long columnsCountEnd, Long rowsCountStart, Long rowsCountEnd, List<String> serializeTypes) {
+    private Schedule generateSchedule(String name,
+                                      Long delay,
+                                      Long columnsCountStart,
+                                      Long columnsCountEnd,
+                                      Long rowsCountStart,
+                                      Long rowsCountEnd,
+                                      List<String> serializeTypes,
+                                      Long clientsCountStart,
+                                      Long clientsCountEnd) {
         //get needed test case
         HashMap root = esbManager.getEsbDescription();
         List<LinkedTreeMap> testCases = (List<LinkedTreeMap>) root.get("testCases");
@@ -59,6 +67,8 @@ public class ScheduleManager {
         additionalParameters.put("rowsCountStart", rowsCountStart);
         additionalParameters.put("rowsCountEnd", rowsCountEnd);
         additionalParameters.put("serializeTypes", serializeTypes);
+        additionalParameters.put("clientsCountStart", clientsCountStart);
+        additionalParameters.put("clientsCountEnd", clientsCountEnd);
 
         HashMap additionalParametersWrapper = new HashMap<>(additionalParameters);
 
@@ -84,10 +94,12 @@ public class ScheduleManager {
             Long columnsCountEnd = Long.valueOf(x.get("columnsCountEnd").toString());
             Long rowsCountStart = Long.valueOf(x.get("rowsCountStart").toString());
             Long rowsCountEnd = Long.valueOf(x.get("rowsCountEnd").toString());
+            Long clientsCountStart = Long.valueOf(x.get("clientsCountStart").toString());
+            Long clientsCountEnd = Long.valueOf(x.get("clientsCountEnd").toString());
             List<String> serializeTypes = (List<String>) x.get("serializeType");
 
 
-            return generateSchedule(name, delay, columnsCountStart, columnsCountEnd, rowsCountStart, rowsCountEnd, serializeTypes);
+            return generateSchedule(name, delay, columnsCountStart, columnsCountEnd, rowsCountStart, rowsCountEnd, serializeTypes, clientsCountStart, clientsCountEnd);
         }).collect(Collectors.toList());
 
         scheduleBoard.setSchedules(collect);

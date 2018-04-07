@@ -22,10 +22,10 @@ ftp:
 
 monitoring:
   sleep: 100
-  bufferSize: 10000000
+  bufferSize: 600
 
 db:
   username: postgres
   password: password
-  url: jdbc:postgresql://192.168.0.5:5432/postgres
+  url: jdbc:postgresql://192.168.0.3:5432/postgres
   driverClassName: org.postgresql.Driver

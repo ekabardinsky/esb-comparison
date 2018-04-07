@@ -27,6 +27,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by ekabardinsky on 4/3/17.
@@ -37,106 +40,131 @@ public class WorkerJDBCThroughHttpTester extends Worker {
         super(schedule, scheduleBoard);
     }
 
+
     @Override
     public void doTest(ResultSender resultSender) {
-        List<HashMap<String, Object>> results = new ArrayList<>();
+        HashMap<String, Object> additionalParameters = schedule.getAdditionalParameters();
+        int clientsCountStart = Double.valueOf(additionalParameters.get("clientsCountStart").toString()).intValue();
+        int clientsCountEnd = Double.valueOf(additionalParameters.get("clientsCountEnd").toString()).intValue();
 
-        Runnable runnable = () -> {
+        for (int i = clientsCountStart; i <= clientsCountEnd; i += 2) {
             try {
-                Gson gson = new Gson();
-                Long taskDuration = null;
+                System.out.println("##################Series " + i + " started##################");
+                ExecutorService threadPool = Executors.newFixedThreadPool(i);
 
-
-                //prepare http client with additionalParameters
-                HashMap<String, Object> additionalParameters = schedule.getAdditionalParameters();
-                String url = (String) additionalParameters.get("url");
-
-                // additional params
-                int columnsCountStart = Double.valueOf(additionalParameters.get("columnsCountStart").toString()).intValue();
-                int columnsCountEnd = Double.valueOf(additionalParameters.get("columnsCountEnd").toString()).intValue();
-                int rowsCountStart = Double.valueOf(additionalParameters.get("rowsCountStart").toString()).intValue();
-                int rowsCountEnd = Double.valueOf(additionalParameters.get("rowsCountEnd").toString()).intValue();
-                List<String> serializeTypes = (List<String>) additionalParameters.get("serializeTypes");
-
-                //calls to esb
-                for(String serializeType : serializeTypes) {
-                    for (int columnsCount = columnsCountStart; columnsCount <= columnsCountEnd; columnsCount+= 5) {
-                        for (int rowsCount = rowsCountStart; rowsCount <= rowsCountEnd; rowsCount+=100) {
-                            System.out.println("------------Try to read data from db. Columns count " + columnsCount + ". Rows count " + rowsCount + ". Serialize to " + serializeType);
-
-                            //configure request
-                            HttpPost request = new HttpPost(url);
-                            ResponseHandler<String> handler = new BasicResponseHandler();
-
-                            //assemble body
-                            HashMap<String, Object> body = new HashMap<>();
-                            body.put("rowsCount", rowsCount);
-                            body.put("columnsCount", columnsCount);
-                            body.put("serializeType", serializeType);
-
-                            //set body
-                            HttpEntity entity = new StringEntity(gson.toJson(body));
-                            request.setEntity(entity);
-
-                            HttpClient client = HttpClientBuilder.create().build();
-
-                            //call
-                            long startTime = System.currentTimeMillis();
-                            HttpResponse execute = client.execute(request);
-                            long endTime = System.currentTimeMillis();
-                            String responseBody = handler.handleResponse(execute);
-
-                            //check response
-                            if (execute.getStatusLine().getStatusCode() != 200) {
-                                System.out.println("Error body:" + body);
-                                throw new IllegalStateException("Wrong response");
-                            }
-
-                            //get results from header
-                            String applicationUseMemory = execute.getFirstHeader("applicationUseMemory").getValue();
-                            String systemUseMemory = execute.getFirstHeader("systemUseMemory").getValue();
-                            String freeMemory = execute.getFirstHeader("freeMemory").getValue();
-                            String swapUseMemory = execute.getFirstHeader("swapUseMemory").getValue();
-                            String applicationCpuLoad = execute.getFirstHeader("applicationCpuLoad").getValue();
-                            String systemCpuLoad = execute.getFirstHeader("systemCpuLoad").getValue();
-                            String concurrentlyMonitoringCount = execute.getFirstHeader("concurrentlyMonitoringCount").getValue();
-
-                            //record duration
-                            taskDuration = endTime - startTime;
-
-                            //assemble result
-                            HashMap<String, Object> result = new HashMap<>();
-                            result.put("applicationUseMemory", applicationUseMemory);
-                            result.put("systemUseMemory", systemUseMemory);
-                            result.put("freeMemory", freeMemory);
-                            result.put("swapUseMemory", swapUseMemory);
-                            result.put("applicationCpuLoad", applicationCpuLoad);
-                            result.put("systemCpuLoad", systemCpuLoad);
-                            result.put("concurrentlyMonitoringCount", concurrentlyMonitoringCount);
-                            result.put("duration", taskDuration);
-
-                            //put input params too
-                            result.put("serializeType", serializeType);
-                            result.put("columnsCount", columnsCount);
-                            result.put("rowsCount", rowsCount);
-
-                            // put results
-                            results.add(result);
-                            System.out.println("Request completed");
-                        }
-                    }
+                //create i parallel clients
+                for (int n = 0; n < i; n++) {
+                    final int finalN = n;
+                    threadPool.submit(() -> {
+                        doSingleTest(resultSender, schedule, scheduleBoard, finalN);
+                    });
                 }
 
-
-                resultSender.sendResult(scheduleBoard, schedule, results);
-                System.out.println("Experiment done");
-            } catch (Exception e) {
+                // softly waiting threads
+                threadPool.shutdown();
+                threadPool.awaitTermination(5, TimeUnit.HOURS);
+                System.out.println("===================Series " + i + " end===================");
+            } catch (InterruptedException e) {
                 e.printStackTrace();
-            } finally {
-                setDone(true);
             }
-        };
+        }
+    }
 
-        new Thread(runnable).start();
+    public void doSingleTest(ResultSender resultSender, Schedule schedule, ScheduleBoard scheduleBoard, int testNumber) {
+        List<HashMap<String, Object>> results = new ArrayList<>();
+
+        try {
+            Gson gson = new Gson();
+            Long taskDuration = null;
+
+
+            //prepare http client with additionalParameters
+            HashMap<String, Object> additionalParameters = schedule.getAdditionalParameters();
+            String url = (String) additionalParameters.get("url");
+
+            // additional params
+            int columnsCountStart = Double.valueOf(additionalParameters.get("columnsCountStart").toString()).intValue();
+            int columnsCountEnd = Double.valueOf(additionalParameters.get("columnsCountEnd").toString()).intValue();
+            int rowsCountStart = Double.valueOf(additionalParameters.get("rowsCountStart").toString()).intValue();
+            int rowsCountEnd = Double.valueOf(additionalParameters.get("rowsCountEnd").toString()).intValue();
+            List<String> serializeTypes = (List<String>) additionalParameters.get("serializeTypes");
+
+            //calls to esb
+            for (String serializeType : serializeTypes) {
+                for (int columnsCount = columnsCountStart; columnsCount <= columnsCountEnd; columnsCount += 10) {
+                    for (int rowsCount = rowsCountStart; rowsCount <= rowsCountEnd; rowsCount += 1000) {
+                        System.out.println("------------Test # " + testNumber + "------------Try to read data from db. Columns count " + columnsCount + ". Rows count " + rowsCount + ". Serialize to " + serializeType);
+
+                        //configure request
+                        HttpPost request = new HttpPost(url);
+                        ResponseHandler<String> handler = new BasicResponseHandler();
+
+                        //assemble body
+                        HashMap<String, Object> body = new HashMap<>();
+                        body.put("rowsCount", rowsCount);
+                        body.put("columnsCount", columnsCount);
+                        body.put("serializeType", serializeType);
+
+                        //set body
+                        HttpEntity entity = new StringEntity(gson.toJson(body));
+                        request.setEntity(entity);
+
+                        HttpClient client = HttpClientBuilder.create().build();
+
+                        //call
+                        long startTime = System.currentTimeMillis();
+                        HttpResponse execute = client.execute(request);
+                        long endTime = System.currentTimeMillis();
+                        String responseBody = handler.handleResponse(execute);
+
+                        //check response
+                        if (execute.getStatusLine().getStatusCode() != 200) {
+                            System.out.println("Error body:" + body);
+                            throw new IllegalStateException("Wrong response");
+                        }
+
+                        //get results from header
+                        String applicationUseMemory = execute.getFirstHeader("applicationUseMemory").getValue();
+                        String systemUseMemory = execute.getFirstHeader("systemUseMemory").getValue();
+                        String freeMemory = execute.getFirstHeader("freeMemory").getValue();
+                        String swapUseMemory = execute.getFirstHeader("swapUseMemory").getValue();
+                        String applicationCpuLoad = execute.getFirstHeader("applicationCpuLoad").getValue();
+                        String systemCpuLoad = execute.getFirstHeader("systemCpuLoad").getValue();
+                        String concurrentlyMonitoringCount = execute.getFirstHeader("concurrentlyMonitoringCount").getValue();
+
+                        //record duration
+                        taskDuration = endTime - startTime;
+
+                        //assemble result
+                        HashMap<String, Object> result = new HashMap<>();
+                        result.put("applicationUseMemory", applicationUseMemory);
+                        result.put("systemUseMemory", systemUseMemory);
+                        result.put("freeMemory", freeMemory);
+                        result.put("swapUseMemory", swapUseMemory);
+                        result.put("applicationCpuLoad", applicationCpuLoad);
+                        result.put("systemCpuLoad", systemCpuLoad);
+                        result.put("concurrentlyMonitoringCount", concurrentlyMonitoringCount);
+                        result.put("duration", taskDuration);
+
+                        //put input params too
+                        result.put("serializeType", serializeType);
+                        result.put("columnsCount", columnsCount);
+                        result.put("rowsCount", rowsCount);
+
+                        // put results
+                        results.add(result);
+                        System.out.println("------------Test # " + testNumber + "------------Request Completed. Columns count " + columnsCount + ". Rows count " + rowsCount + ". Serialize to " + serializeType);
+                    }
+                }
+            }
+
+
+            resultSender.sendResult(scheduleBoard, schedule, results);
+            System.out.println("------------Test # " + testNumber + " done");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            setDone(true);
+        }
     }
 }

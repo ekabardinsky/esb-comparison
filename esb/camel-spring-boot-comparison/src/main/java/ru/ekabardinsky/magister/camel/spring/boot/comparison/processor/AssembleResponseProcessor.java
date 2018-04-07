@@ -22,8 +22,8 @@ public class AssembleResponseProcessor implements Processor {
         long systemUseMemory = result.stream().mapToLong(x->x.getSystemUseMemory()).max().getAsLong();
         long freeMemory = result.stream().mapToLong(x->x.getFreeMemory()).min().getAsLong();
         long swapUseMemory = result.stream().mapToLong(x->x.getSwapUseMemory()).max().getAsLong();
-        double applicationCpuLoad = result.stream().mapToDouble(x -> x.getApplicationCpuLoad()).average().getAsDouble();
-        double systemCpuLoad = result.stream().mapToDouble(x->x.getSystemCpuLoad()).average().getAsDouble();
+        double applicationCpuLoad = result.stream().mapToDouble(x -> x.getApplicationCpuLoad()).max().getAsDouble();
+        double systemCpuLoad = result.stream().mapToDouble(x->x.getSystemCpuLoad()).max().getAsDouble();
         long concurrentlyMonitoringCount = result.stream().mapToLong(x->x.getConcurrentlyMonitoringCount()).max().getAsLong();
 
         exchange.getOut().setHeader("applicationUseMemory", applicationUseMemory);

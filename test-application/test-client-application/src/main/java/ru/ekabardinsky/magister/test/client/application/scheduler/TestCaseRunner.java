@@ -38,7 +38,7 @@ public class TestCaseRunner {
                 .getSchedules().stream()
                 .map((schedule) -> Worker.getInstance(schedule, scheduleBoard))
                 .collect(Collectors.toList());
-        this.workers.forEach(x -> x.doTest(resultSender));
+        this.workers.forEach(x -> new Thread(()->x.doTest(resultSender)).start());
     }
 
     public ResultSender getResultSender() {
